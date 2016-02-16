@@ -1,0 +1,29 @@
+name: Replay
+main: yqt.mc.spigotreplay.ReplayPlugin
+version: 1.0
+author: yqt1001
+depend: [ProtocolLib]
+commands:
+   rec:
+      description: Toggles recording a replay
+      usage: /<command>
+      permission: bukkit.op
+      aliases: [record]
+   startreplay:
+      description: Plays a specified replay or if given no arguments, the latest
+      usage: /<command> REPLAY_NUM
+      permission: bukkit.op
+      aliases: [replay]
+   p:
+      description: Pauses or resumes a currently playing replay
+      usage: /<command>
+      permission: bukkit.op
+   lastticks:
+      description: Retrieves the packets send in the last specified amount of ticks
+      usage: /<command> <ticks>
+      permission: bukkit.op
+   getreplays:
+      description: Retrieves the list of saved replays
+      usage: /<command>
+      permission: bukkit.op
+      aliases: [listreplays]
