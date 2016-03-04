@@ -3,8 +3,17 @@ package yqt.mc.spigotreplay.listeners;
 import java.util.Arrays;
 import java.util.LinkedList;
 
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockBurnEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockFadeEvent;
+import org.bukkit.event.block.BlockFormEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -12,8 +21,10 @@ import org.bukkit.scheduler.BukkitRunnable;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.wrappers.BlockPosition;
 import com.comphenix.protocol.wrappers.EnumWrappers.PlayerInfoAction;
 import com.comphenix.protocol.wrappers.PlayerInfoData;
+import com.comphenix.protocol.wrappers.WrappedBlockData;
 
 import yqt.mc.spigotreplay.Replay;
 import yqt.mc.spigotreplay.ReplayPlugin;
@@ -112,4 +123,96 @@ public class BukkitListener implements Listener {
 		packet.getBytes().write(0, (byte) (e.getPlayer().getLocation().getPitch() * 256.0F / 360.0F));
 		r.getCurrentArrayPtr().add(packet);
 	}
-}
+	
+	/*
+	 * Save reset state for block breaks
+	 */
+	
+	@EventHandler
+	public void onBlockBreak(BlockBreakEvent e) {
+		Replay r = this.main.getRunnables().getActiveReplay();
+		
+		this.blockBreakHandler(e.getBlock(), r, e.getBlock().getWorld());
+		
+	}
+	
+	@EventHandler
+	public void onBlockBurn(BlockBurnEvent e) {
+		Replay r = this.main.getRunnables().getActiveReplay();
+		
+		this.blockBreakHandler(e.getBlock(), r, e.getBlock().getWorld());
+	}
+	
+	@EventHandler
+	public void onBlockExplode(BlockExplodeEvent e) {
+		Replay r = this.main.getRunnables().getActiveReplay();
+		
+		this.blockBreakHandler(e.getBlock(), r, e.getBlock().getWorld());
+	}
+	
+	@EventHandler
+	public void onBlockFade(BlockFadeEvent e) {
+		Replay r = this.main.getRunnables().getActiveReplay();
+		
+		this.blockBreakHandler(e.getBlock(), r, e.getBlock().getWorld());
+	}
+	
+	@SuppressWarnings("deprecation")
+	private void blockBreakHandler(Block b, Replay r, World w) {
+		//replay must be recording
+		if(r == null || r.getStatus() != ReplayStatus.RECORDING)
+			return;
+				
+		//fail safe, protocol listeners must be instantiated
+		RecordingProtocolHandler RPH = this.main.getRunnables().getProtocolHandler();
+		if(RPH == null)
+			return;
+		
+		//if replay and player aren't in the same world
+		if(!r.getWorld().equals(w))
+			return;
+				
+		//add block place packet to reset the state for replay
+		PacketContainer packet = PM.createPacket(PacketType.Play.Server.BLOCK_CHANGE);
+		packet.getBlockPositionModifier().write(0, new BlockPosition(b.getX(), b.getY(), b.getZ()));
+		packet.getBlockData().write(0, WrappedBlockData.createData(b.getType(), b.getData()));
+		r.getResetCreateBlocks().add(packet);
+	}
+	
+	/* Block place events */
+	
+	@EventHandler
+	public void onBlockPlace(BlockPlaceEvent e) {
+		Replay r = this.main.getRunnables().getActiveReplay();
+		
+		this.blockPlaceHandler(e.getBlock(), r, e.getBlock().getWorld());
+	}
+	
+	@EventHandler
+	public void onBlockForm(BlockFormEvent e) {
+		Replay r = this.main.getRunnables().getActiveReplay();
+		
+		this.blockPlaceHandler(e.getBlock(), r, e.getBlock().getWorld());
+	}
+	
+	private void blockPlaceHandler(Block b, Replay r, World w) {
+		//replay must be recording
+		if(r == null || r.getStatus() != ReplayStatus.RECORDING)
+			return;
+						
+		//fail safe, protocol listeners must be instantiated
+		RecordingProtocolHandler RPH = this.main.getRunnables().getProtocolHandler();
+		if(RPH == null)
+			return;
+		
+		//if replay and player aren't in the same world
+		if(!r.getWorld().equals(w))
+			return;
+						
+		//add block place packet to reset the state for replay
+		PacketContainer packet = PM.createPacket(PacketType.Play.Server.BLOCK_CHANGE);
+		packet.getBlockPositionModifier().write(0, new BlockPosition(b.getX(), b.getY(), b.getZ()));
+		packet.getBlockData().write(0, WrappedBlockData.createData(Material.AIR, 0));
+		r.getResetRemoveBlocks().add(packet);
+	}
+} 

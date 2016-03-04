@@ -33,7 +33,7 @@ import yqt.mc.spigotreplay.entity.PlayerWrapper;
 
 public class EntityPackets {
 
-	/* Singleton to manage the listening to entity related packets */
+	/* Manage the listening to entity related packets */
 	
 	/*
 	 * This file is testament to how hard fully understanding the Minecraft protocol is.
@@ -50,10 +50,10 @@ public class EntityPackets {
 	 * 
 	 * "Oh look players stopped moving again!" -> a while later...
 	 * "Wow that was a stupid mistake, I forgot to multiply the delta of the distance
-	 * by 32. (line 503) The difference is too small and when casting to a byte, it would floor it to 0 making 
+	 * by 32. (line 514) The difference is too small and when casting to a byte, it would floor it to 0 making 
 	 * entities completely stationary. If only I could fix head motion..." -> a while later...
 	 * "Turns out that wiki.vg is just making this confusing, you only need to do an additional
-	 * input % 360 to make the client packets readable, on top of all the other operations. (line 447) I wish 
+	 * input % 360 to make the client packets readable, on top of all the other operations. (line 458) I wish 
 	 * I could remember how I came so quickly to that, almost like MOD 360 is the answer to life.
 	 * Welp I broke player movement again somehow..."
 	 * 

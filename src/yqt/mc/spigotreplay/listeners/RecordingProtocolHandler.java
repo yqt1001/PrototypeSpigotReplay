@@ -19,6 +19,7 @@ public class RecordingProtocolHandler {
 	private int selectedPlayer;
 	
 	private EntityPackets ep;
+	private BlockPackets bp;
 	
 	public RecordingProtocolHandler(ReplayPlugin main, Replay active) {
 		this.main = main;
@@ -33,6 +34,7 @@ public class RecordingProtocolHandler {
 	/* Method to set up the protocol listeners using ProtocolLib */
 	private void setUpListeners() {
 		ep = new EntityPackets(this.main, this, this.active, this.PM);
+		bp = new BlockPackets(this.main, this, this.active, this.PM);
 	}
 	
 	/**
@@ -45,11 +47,16 @@ public class RecordingProtocolHandler {
 	/**
 	 *  This method just checks for duplicates and then stores the packet, simply cloning it 
 	 */
-	public void standardPacketHandler(PacketContainer p, PacketEvent e) {
+	public boolean standardPacketHandler(PacketContainer p, PacketEvent e) {
 		this.incrementCount();
 		
 		if(e.getPlayer().getEntityId() == this.selectedPlayer)
+		{
 			this.active.getCurrentArrayPtr().add(p.deepClone());
+			return true;
+		}
+		
+		return false;
 	}
 	
 	/**
@@ -87,6 +94,7 @@ public class RecordingProtocolHandler {
 		
 		//force update the listeners
 		this.ep.updateSelectedPlayer(this.selectedPlayer);
+		this.bp.updateSelectedPlayer(this.selectedPlayer);
 	}
 	
 	public int getCount() {

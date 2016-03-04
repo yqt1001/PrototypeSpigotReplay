@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -35,6 +34,8 @@ public class Replay {
 	
 	private HashMap<Integer, EntityWrapper> clonedEntities = new HashMap<Integer, EntityWrapper>();
 	private HashMap<Integer, LinkedList<PacketContainer>> savedPackets = new HashMap<Integer, LinkedList<PacketContainer>>();
+	private LinkedList<PacketContainer> resetRemoveBlocks = new LinkedList<PacketContainer>();
+	private LinkedList<PacketContainer> resetCreateBlocks = new LinkedList<PacketContainer>();
 	private LinkedList<PacketContainer> ptr;
 	
 	public Replay(ReplayPlugin main, World world, int UID) {
@@ -86,6 +87,14 @@ public class Replay {
 		return this.savedPackets;
 	}
 	
+	public LinkedList<PacketContainer> getResetRemoveBlocks() {
+		return this.resetRemoveBlocks;
+	}
+	
+	public LinkedList<PacketContainer> getResetCreateBlocks() {
+		return this.resetCreateBlocks;
+	}
+	
 	public LinkedList<PacketContainer> getCurrentArrayPtr() {
 		return this.ptr;
 	}
@@ -94,8 +103,6 @@ public class Replay {
 	private void deepCloneEntities() {
 		List<Entity> entities = this.world.getEntities();
 		
-		int entityCount[] = {0, 0, 0, 0, 0};
-		
 		for(Entity e : entities)
 		{
 			//entity is an experience orb
@@ -103,14 +110,12 @@ public class Replay {
 			{
 				ExperienceOrb orb = (ExperienceOrb) e;
 				this.clonedEntities.put(orb.getEntityId(), new OrbWrapper(orb.getEntityId(), orb.getLocation(), orb.getExperience()));
-				entityCount[0]++;
 			}
 			//entity is a painting
 			else if(e.getType() == EntityType.PAINTING)
 			{
 				Painting p = (Painting) e;
 				this.clonedEntities.put(p.getEntityId(), new PaintingWrapper(p.getEntityId(), p.getLocation(), p.getArt().toString(), p.getFacing()));
-				entityCount[1]++;
 			}
 			//entity is a player
 			else if(e.getType() == EntityType.PLAYER)
@@ -119,26 +124,17 @@ public class Replay {
 				this.clonedEntities.put(p.getEntityId(), new PlayerWrapper(p.getEntityId(), p.getLocation(), p.getName(), p.getUniqueId(), 
 						p.getItemInHand(), p.getInventory().getArmorContents(), WrappedDataWatcher.getEntityWatcher(p).deepClone(), 
 						p.getGameMode(), WrappedGameProfile.fromPlayer(p)));
-				
-				entityCount[2]++;
 			}
 			//entity is a misc object
 			else if(ObjectWrapper.VALID_OBJECTS.keySet().contains(e.getType())) 
-			{
 				this.clonedEntities.put(e.getEntityId(), new ObjectWrapper(e.getEntityId(), e.getLocation(), e.getType(), 0)); //Currently no NMS support for object data, just setting to 0 for now
-				entityCount[3]++;
-			}
 			//entity is a mob
 			else 
-			{
+			
 				this.clonedEntities.put(e.getEntityId(), new MobWrapper(e.getEntityId(), e.getLocation(), e.getType(), e.getVelocity(), 
 						WrappedDataWatcher.getEntityWatcher(e).deepClone()));
-				
-				entityCount[4]++;
-			}
 		}
 		
-		Bukkit.broadcastMessage("Cloned " + this.clonedEntities.size() + " entities!");
-		Bukkit.broadcastMessage("Entity counts: Exp orb, " + entityCount[0] + " Painting, " + entityCount[1] + " Player, " + entityCount[2] + " Object, " + entityCount[3] + " Mob, " + entityCount[4]);
+		//Bukkit.broadcastMessage("Cloned " + this.clonedEntities.size() + " entities!");
 	}
 }

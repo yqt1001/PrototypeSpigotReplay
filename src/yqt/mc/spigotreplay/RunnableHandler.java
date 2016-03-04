@@ -53,7 +53,6 @@ public class RunnableHandler {
 						PacketType.Play.Server.SPAWN_ENTITY_EXPERIENCE_ORB,
 						PacketType.Play.Server.SPAWN_ENTITY_PAINTING));
 	
-	//Instantiate the RunnableHandler singleton
 	public RunnableHandler(ReplayPlugin main) {
 		this.main = main;
 		this.PM = this.main.getProtocol();
@@ -104,9 +103,6 @@ public class RunnableHandler {
 	public void startReplayRunnable(final Replay r) {
 		this.active = r;
 		this.active.setStatus(ReplayStatus.REPLAY);
-		
-		Bukkit.broadcastMessage("Loading replay...");
-		
 		this.loadReplay();
 		
 		Bukkit.broadcastMessage("Loaded replay.");
@@ -130,7 +126,7 @@ public class RunnableHandler {
 						//check to see if dummy packet
 						if(packetExceptions.contains(packet.getType()))
 						{
-							//likely a mob spawn exception
+							//for now only a mob spawn exception
 							loadEntities(replayTime);
 							
 							//may be more exceptions in the future, idk
@@ -189,6 +185,29 @@ public class RunnableHandler {
 		//make all players spectators
 		for(Player p : Bukkit.getOnlinePlayers())
 			p.setGameMode(GameMode.SPECTATOR);
+		
+		//reset blocks
+		for(PacketContainer pc : this.active.getResetRemoveBlocks())
+			for(Player p : Bukkit.getOnlinePlayers())
+				if(p.getWorld().equals(this.active.getWorld()))
+				{
+					try {
+						this.PM.sendServerPacket(p, pc);
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					}
+				}
+		
+		for(PacketContainer pc : this.active.getResetCreateBlocks())
+			for(Player p : Bukkit.getOnlinePlayers())
+				if(p.getWorld().equals(this.active.getWorld()))
+				{
+					try {
+						this.PM.sendServerPacket(p, pc);
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+					}
+				}
 		
 		//spawn in cloned entities
 		this.loadEntities(-1);
